@@ -1,10 +1,11 @@
-tensorflow==2.15.0
-protobuf==3.20.3
+tensorflow>=2.16.1
 pandas
 numpy
 scikit-learn
 matplotlib
 streamlit
 scikeras
+protobuf>=4.21.0
+
 
 

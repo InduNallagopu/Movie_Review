@@ -5,6 +5,8 @@ numpy
 scikit-learn
 matplotlib
 scikeras
+h5py
+
 
 
 

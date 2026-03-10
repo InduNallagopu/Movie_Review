@@ -100,7 +100,12 @@ Analyze whether a movie review is **Positive** or **Negative** using an RNN mode
 if "review_text" not in st.session_state:
     st.session_state.review_text = ""
 
-
+user_input = st.text_area(
+    "✍️ Enter your movie review",
+    height=150,
+    key="review_text",
+    placeholder="Example: This movie was absolutely amazing!"
+)
 
 col1, col2 = st.columns(2)
 
@@ -112,12 +117,7 @@ with col2:
 if clear_button:
     st.session_state.review_text = ""
     
-user_input = st.text_area(
-    "✍️ Enter your movie review",
-    height=150,
-    key="review_text",
-    placeholder="Example: This movie was absolutely amazing!"
-)
+
 if predict_button:
     if user_input:
         processed_input = preprocess_text(user_input)

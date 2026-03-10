@@ -97,7 +97,8 @@ st.markdown("""
 # 🎬 IMDB Movie Review Sentiment Analyzer
 Analyze whether a movie review is **Positive** or **Negative** using an RNN model.
 """)
-
+if "review_text" not in st.session_state:
+    st.session_state.review_text = ""
 user_input = st.text_area(
     "✍️ Enter your movie review",
     height=150,
@@ -130,5 +131,6 @@ if predict_button:
     else:
         st.warning("Please enter a review first.")
 if clear_button:
-    st.session_state["review_text"] = ""
+    st.session_state.review_text = ""
+    st.rerun()
     

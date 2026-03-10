@@ -9,6 +9,26 @@ from tensorflow.keras.datasets import imdb
 from tensorflow.keras.preprocessing import sequence
 import streamlit as st
 
+st.set_page_config(
+    page_title="IMDB Sentiment Analyzer",
+    page_icon="🎬",
+    layout="centered"
+)
+
+st.sidebar.title("About")
+
+st.sidebar.info(
+"""
+This app predicts movie review sentiment using a **Simple RNN model** trained on the IMDB dataset.
+
+Technologies used:
+- Python
+- TensorFlow
+- NLP
+- Streamlit
+"""
+)
+
 # --- 1. COMPATIBILITY BRIDGE ---
 # This prevents the 'config' attribute error in Keras 2
 try:
@@ -72,19 +92,43 @@ def preprocess_text(text):
     padded_review = sequence.pad_sequences([encoded_review], maxlen=500)
     return padded_review
 
-st.title('IMDB Movie Review Sentiment Analysis')
-st.write('Enter a movie review to predict its sentiment.')
 
-user_input = st.text_area('Movie Review')
+st.markdown("""
+# 🎬 IMDB Movie Review Sentiment Analyzer
+Analyze whether a movie review is **Positive** or **Negative** using an RNN model.
+""")
 
-if st.button('Predict Sentiment'):
+user_input = st.text_area(
+    "✍️ Enter your movie review",
+    height=150,
+    key="review_text",
+    placeholder="Example: This movie was absolutely amazing!"
+)
+
+
+col1, col2 = st.columns(2)
+
+with col1:
+    predict_button = st.button("Analyze Sentiment")
+
+with col2:
+    clear_button = st.button("Clear Review")
+
+if predict_button:
     if user_input:
         processed_input = preprocess_text(user_input)
         prediction = model.predict(processed_input)
-        sentiment = 'Positive' if prediction[0][0] > 0.5 else 'Negative'
-        
-        st.write(f'**Sentiment:** {sentiment}')
-        st.write(f'**Confidence Score:** {prediction[0][0]:.4f}')
+        confidence = float(prediction[0][0])
+        sentiment = "Positive" if confidence > 0.5 else "Negative"
+        if sentiment == "Positive":
+            st.success(f"😊 Sentiment: {sentiment}")
+        else:
+            st.error(f"😞 Sentiment: {sentiment}")
+        st.write(f"Confidence Score: {confidence:.2f}")
+        st.progress(confidence)
+      
     else:
         st.warning("Please enter a review first.")
+if clear_button:
+    st.session_state["review_text"] = ""
     

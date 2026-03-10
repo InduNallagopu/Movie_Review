@@ -17,34 +17,31 @@ word_index=imdb.get_word_index()
 reverse_word_index={value:key for key,value in word_index.items()}
 #load the pre-trained model
 #model=load_model('simple_rnn_imdb.h5')
+
+
+import tensorflow as tf
 import h5py
 import json
 
-def load_model_fixed(model_path):
-    # Open the file and manually fix the config
-    with h5py.File(model_path, 'r') as f:
+def load_keras_model_custom(path):
+    with h5py.File(path, 'r') as f:
         model_config = json.loads(f.attrs.get('model_config'))
     
-    # This helper removes the 'ragged' key that causes the error
-    def remove_ragged(obj):
-        if isinstance(obj, dict):
-            obj.pop('ragged', None)
-            for key in obj:
-                remove_ragged(obj[key])
-        elif isinstance(obj, list):
-            for item in obj:
-                remove_ragged(item)
+    def clean_dict(d):
+        # Remove keys that cause crashes in older Keras versions
+        for k in ['batch_shape', 'ragged', 'groups']:
+            d.pop(k, None)
+        for v in d.values():
+            if isinstance(v, dict): clean_dict(v)
+            elif isinstance(v, list): [clean_dict(i) for i in v if isinstance(i, dict)]
 
-    remove_ragged(model_config)
-    
-    # Reconstruct the model structure from the cleaned config
+    clean_dict(model_config)
     model = tf.keras.models.model_from_json(json.dumps(model_config))
-    # Load the actual weights
-    model.load_weights(model_path)
+    model.load_weights(path)
     return model
 
-# NEW LOAD LINE:
-model = load_model_fixed('simple_rnn_imdb.h5')
+# Replace your load_model line with:
+model = load_keras_model_custom('simple_rnn_imdb.h5')
 
 def decode_review(encoded_review):
     #decode the review by mapping integers back to words

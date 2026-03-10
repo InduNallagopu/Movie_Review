@@ -1,47 +1,46 @@
+
+
 import os
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
-import tensorflow as tf
-# This is the "Magic" line that fixes the batch_shape/ragged errors
-tf.keras.config.enable_unsafe_deserialization()
-
+import json
+import h5py
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.datasets import imdb
 from tensorflow.keras.preprocessing import sequence
-from tensorflow.keras.models import load_model
 
-#load the IMDB dataset word index
-word_index=imdb.get_word_index()
-#reverse the word index to get the mapping from integers to words
-reverse_word_index={value:key for key,value in word_index.items()}
-#load the pre-trained model
-#model=load_model('simple_rnn_imdb.h5')
+# --- 1. THE COMPATIBILITY BRIDGE (The "Magic" lines) ---
+try:
+    tf.keras.config.enable_unsafe_deserialization()
+except AttributeError:
+    pass # We are in Keras 2, which is fine
 
-
-import tensorflow as tf
-import h5py
-import json
-
-def load_keras_model_custom(path):
-    with h5py.File(path, 'r') as f:
-        model_config = json.loads(f.attrs.get('model_config'))
+def load_model_surgery(model_path):
+    with h5py.File(model_path, 'r') as f:
+        model_config_raw = f.attrs.get('model_config')
+        if isinstance(model_config_raw, bytes):
+            model_config_raw = model_config_raw.decode('utf-8')
+        model_config = json.loads(model_config_raw)
     
-    def clean_dict(d):
-        # Remove keys that cause crashes in older Keras versions
-        for k in ['batch_shape', 'ragged', 'groups']:
-            d.pop(k, None)
-        for v in d.values():
-            if isinstance(v, dict): clean_dict(v)
-            elif isinstance(v, list): [clean_dict(i) for i in v if isinstance(i, dict)]
+    def clean_config(obj):
+        if isinstance(obj, dict):
+            for key in ['batch_shape', 'ragged', 'groups']:
+                obj.pop(key, None)
+            for v in obj.values(): clean_config(v)
+        elif isinstance(obj, list):
+            for item in obj: clean_config(item)
 
-    clean_dict(model_config)
+    clean_config(model_config)
     model = tf.keras.models.model_from_json(json.dumps(model_config))
-    model.load_weights(path)
+    model.load_weights(model_path)
     return model
 
-# Replace your load_model line with:
-model = load_keras_model_custom('simple_rnn_imdb.h5')
+# --- 2. YOUR ORIGINAL DATASET CODE (Kept exactly the same) ---
+# Load the IMDB dataset word index
+word_index = imdb.get_word_index()
+reverse_word_index = {value: key for key, value in word_index.items()}
+
+# Load the model using the surgery function instead of load_model
+model = load_model_surgery('simple_rnn_imdb.h5')
 
 def decode_review(encoded_review):
     #decode the review by mapping integers back to words

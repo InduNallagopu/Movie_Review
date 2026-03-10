@@ -37,6 +37,11 @@ def load_model_surgery(model_path):
                 # Extract the actual name (e.g., 'float32') from the policy dict
                 inner_config = obj['dtype'].get('config', {})
                 obj['dtype'] = inner_config.get('name', 'float32')
+
+            # 3. Fix the DTypePolicy error
+            if 'dtype' in obj and isinstance(obj['dtype'], dict):
+                inner_config = obj['dtype'].get('config', {})
+                obj['dtype'] = inner_config.get('name', 'float32')
             
             for v in obj.values():
                 clean_config(v)

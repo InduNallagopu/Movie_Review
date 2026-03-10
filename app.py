@@ -9,7 +9,35 @@ word_index=imdb.get_word_index()
 #reverse the word index to get the mapping from integers to words
 reverse_word_index={value:key for key,value in word_index.items()}
 #load the pre-trained model
-model=load_model('simple_rnn_imdb.h5')
+#model=load_model('simple_rnn_imdb.h5')
+import h5py
+import json
+
+def load_model_fixed(model_path):
+    # Open the file and manually fix the config
+    with h5py.File(model_path, 'r') as f:
+        model_config = json.loads(f.attrs.get('model_config'))
+    
+    # This helper removes the 'ragged' key that causes the error
+    def remove_ragged(obj):
+        if isinstance(obj, dict):
+            obj.pop('ragged', None)
+            for key in obj:
+                remove_ragged(obj[key])
+        elif isinstance(obj, list):
+            for item in obj:
+                remove_ragged(item)
+
+    remove_ragged(model_config)
+    
+    # Reconstruct the model structure from the cleaned config
+    model = tf.keras.models.model_from_json(json.dumps(model_config))
+    # Load the actual weights
+    model.load_weights(model_path)
+    return model
+
+# NEW LOAD LINE:
+model = load_model_fixed('simple_rnn_imdb.h5')
 
 def decode_review(encoded_review):
     #decode the review by mapping integers back to words

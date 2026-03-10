@@ -16,8 +16,10 @@ try:
 except AttributeError:
     pass 
 
+
+
 def load_model_surgery(model_path):
-    """Cleans 'batch_shape' and 'ragged' so the model loads in older Keras."""
+    """Cleans batch_shape, ragged, and complex DTypePolicy for Keras 2 compatibility."""
     with h5py.File(model_path, 'r') as f:
         model_config_raw = f.attrs.get('model_config')
         if isinstance(model_config_raw, bytes):
@@ -26,14 +28,27 @@ def load_model_surgery(model_path):
     
     def clean_config(obj):
         if isinstance(obj, dict):
+            # 1. Remove keys that Keras 2 doesn't understand
             for key in ['batch_shape', 'ragged', 'groups']:
                 obj.pop(key, None)
-            for v in obj.values(): clean_config(v)
+            
+            # 2. Fix the DTypePolicy error: Convert dict dtype to a simple string
+            if 'dtype' in obj and isinstance(obj['dtype'], dict):
+                # Extract the actual name (e.g., 'float32') from the policy dict
+                inner_config = obj['dtype'].get('config', {})
+                obj['dtype'] = inner_config.get('name', 'float32')
+            
+            for v in obj.values():
+                clean_config(v)
         elif isinstance(obj, list):
-            for item in obj: clean_config(item)
+            for item in obj:
+                clean_config(item)
 
     clean_config(model_config)
+    
+    # Reconstruct the model structure from the cleaned config
     model = tf.keras.models.model_from_json(json.dumps(model_config))
+    # Load the actual weights
     model.load_weights(model_path)
     return model
 

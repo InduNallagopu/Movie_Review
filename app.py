@@ -92,7 +92,8 @@ def preprocess_text(text):
     padded_review = sequence.pad_sequences([encoded_review], maxlen=500)
     return padded_review
 
-
+def clear_text():
+    st.session_state.review_text = ""
 st.markdown("""
 # 🎬 IMDB Movie Review Sentiment Analyzer
 Analyze whether a movie review is **Positive** or **Negative** using an RNN model.
@@ -113,9 +114,8 @@ with col1:
     predict_button = st.button("Analyze Sentiment")
 
 with col2:
-    clear_button = st.button("Clear Review")
-if clear_button:
-    st.session_state.review_text = ""
+    st.button("Clear Review", on_click=clear_text)
+
     
 
 if predict_button:

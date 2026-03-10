@@ -1,3 +1,10 @@
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import tensorflow as tf
+# This is the "Magic" line that fixes the batch_shape/ragged errors
+tf.keras.config.enable_unsafe_deserialization()
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.datasets import imdb

@@ -58,15 +58,20 @@ Users can enter any movie review and instantly receive:
 ## ⚙️ Installation
 
 ### 1️⃣ Clone the repository
+```bash
 git clone https://github.com/InduNallagopu/Movie_Review.git
 cd Movie_Review
+```
 
 ### 2️⃣ Install dependencies
+```bash
 pip install -r requirements.txt
+```
 
 ### 3️⃣ Run the Streamlit app
+```bash
 streamlit run app.py
-
+```
 
 ---
 

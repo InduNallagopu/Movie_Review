@@ -49,7 +49,8 @@ Users can enter any movie review and instantly receive:
 ├── requirements.txt # Python dependencies
 ├── prediction.ipynb # Model inference notebook
 ├── simplernn.ipynb # Model training notebook
-└── README.md # Project documentation```
+└── README.md # Project documentation
+```
 
 
 ---
